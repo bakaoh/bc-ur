@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 #include <assert.h>
+#include <iterator>
 
 #include "../src/bc-ur.hpp"
 #include "test-utils.hpp"
