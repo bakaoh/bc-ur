@@ -62,8 +62,8 @@ std::pair<std::vector<T>, std::vector<T>> split(const std::vector<T>& buf, size_
     auto first = buf.begin();
     auto c = std::min(buf.size(), count);
     auto last = first + c;
-    auto a = std::vector(first, last);
-    auto b = std::vector(last, buf.end());
+    auto a = std::vector<T>(first, last);
+    auto b = std::vector<T>(last, buf.end());
     return std::make_pair(a, b);
 }
 
@@ -72,7 +72,7 @@ std::vector<T> take_first(const std::vector<T> &buf, size_t count) {
     auto first = buf.begin();
     auto c = std::min(buf.size(), count);
     auto last = first + c;
-    return std::vector(first, last);
+    return std::vector<T>(first, last);
 }
 
 void xor_into(ByteVector& target, const ByteVector& source);

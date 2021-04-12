@@ -29,7 +29,7 @@ set<size_t> choose_fragments(uint32_t seq_num, size_t seq_len, uint32_t checksum
     if(seq_num <= seq_len) {
         return set<size_t>({seq_num - 1});
     } else {
-        auto seed = join(vector({int_to_bytes(seq_num), int_to_bytes(checksum)}));
+        auto seed = join(vector<ByteVector>({int_to_bytes(seq_num), int_to_bytes(checksum)}));
         auto rng = Xoshiro256(seed);
         auto degree = choose_degree(seq_len, rng);
         vector<size_t> indexes;

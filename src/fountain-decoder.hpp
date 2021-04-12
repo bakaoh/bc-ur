@@ -13,14 +13,14 @@
 #include <map>
 #include <exception>
 #include <deque>
-#include <optional>
-#include <variant>
+#include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
 namespace ur {
 
 class FountainDecoder final {
 public:
-    typedef std::optional<std::variant<ByteVector, std::exception> > Result;
+    typedef boost::optional<boost::variant<ByteVector, std::exception> > Result;
 
     class InvalidPart: public std::exception { };
     class InvalidChecksum: public std::exception { };
@@ -32,11 +32,11 @@ public:
     const PartIndexes& last_part_indexes() const { return last_part_indexes_.value(); }
     size_t processed_parts_count() const { return processed_parts_count_; }
     const Result& result() const { return result_; }
-    bool is_success() const { return result() && std::holds_alternative<ByteVector>(result().value()); }
-    bool is_failure() const { return result() && std::holds_alternative<std::exception>(result().value()); }
+    bool is_success() const { return result() && result().value().type() == typeid(ByteVector); }
+    bool is_failure() const { return result() && result().value().type() == typeid(std::exception); }
     bool is_complete() const { return result().has_value(); }
-    const ByteVector& result_message() const { return std::get<ByteVector>(result().value()); }
-    const std::exception& result_error() const { return std::get<std::exception>(result().value()); }
+    const ByteVector& result_message() const { return boost::get<ByteVector>(result().value()); }
+    const std::exception& result_error() const { return boost::get<std::exception>(result().value()); }
 
     double estimated_percent_complete() const;
     bool receive_part(FountainEncoder::Part& encoder_part);
@@ -61,17 +61,17 @@ private:
     };
 
     PartIndexes received_part_indexes_;
-    std::optional<PartIndexes> last_part_indexes_;
+    boost::optional<PartIndexes> last_part_indexes_;
     size_t processed_parts_count_ = 0;
 
     Result result_;
 
     typedef std::map<PartIndexes, Part> PartDict;
 
-    std::optional<PartIndexes> _expected_part_indexes;
-    std::optional<size_t> _expected_fragment_len;
-    std::optional<size_t> _expected_message_len;
-    std::optional<uint32_t> _expected_checksum;
+    boost::optional<PartIndexes> _expected_part_indexes;
+    boost::optional<size_t> _expected_fragment_len;
+    boost::optional<size_t> _expected_message_len;
+    boost::optional<uint32_t> _expected_checksum;
 
     PartDict _simple_parts;
     PartDict _mixed_parts;

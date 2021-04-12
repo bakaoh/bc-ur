@@ -8,12 +8,13 @@
 #include "fountain-encoder.hpp"
 #include <assert.h>
 #include <cmath>
-#include <optional>
+#include <boost/optional.hpp>
 #include <vector>
 #include <limits>
 #include "cbor-lite.hpp"
 
 using namespace std;
+using namespace boost;
 
 namespace ur {
 

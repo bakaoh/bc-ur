@@ -125,7 +125,7 @@ static const ByteVector _decode(const string& s, char separator, size_t word_len
         words = partition(s, 2);
     }
     ByteVector buf;
-    transform(words.begin(), words.end(), back_inserter(buf), [&](auto word) { return decode_word(word, word_len); });
+    transform(words.begin(), words.end(), back_inserter(buf), [&](std::string word) { return decode_word(word, word_len); });
     if(buf.size() < 5) {
         throw runtime_error("Invalid Bytewords.");
     }

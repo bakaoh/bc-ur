@@ -13,7 +13,9 @@ using namespace std;
 namespace ur {
 
 UR URDecoder::decode(const string& s) {
-    auto [type, components] = parse(s);
+    auto parse_s = parse(s);
+    auto type = parse_s.first;
+    auto components = parse_s.second;
 
     if(components.empty()) throw InvalidPathLength();
     auto body = components.front();
@@ -47,7 +49,7 @@ pair<string, StringVector> URDecoder::parse(const string& s) {
     if(!is_ur_type(type)) throw InvalidType();
 
     auto comps = StringVector(components.begin() + 1, components.end());
-    return pair(type, comps);
+    return pair<string, StringVector>(type, comps);
 }
 
 pair<uint32_t, size_t> URDecoder::parse_sequence_component(const string& s) {
@@ -57,7 +59,7 @@ pair<uint32_t, size_t> URDecoder::parse_sequence_component(const string& s) {
         uint32_t seq_num = stoul(comps[0]);
         size_t seq_len = stoul(comps[1]);
         if(seq_num < 1 || seq_len < 1) throw InvalidSequenceComponent();
-        return pair(seq_num, seq_len);
+        return pair<uint32_t, size_t>(seq_num, seq_len);
     } catch(...) {
         throw InvalidSequenceComponent();
     }
@@ -79,7 +81,10 @@ bool URDecoder::receive_part(const std::string& s) {
         if(result_.has_value()) return false;
 
         // Don't continue if this part doesn't validate
-        auto [type, components] = parse(s);
+        auto parse_s = parse(s);
+        auto type = parse_s.first;
+        auto components = parse_s.second;
+
         if(!validate_part(type)) return false;
 
         // If this is a single-part UR then we're done
@@ -96,7 +101,9 @@ bool URDecoder::receive_part(const std::string& s) {
 
         // Parse the sequence component and the fragment, and
         // make sure they agree.
-        auto [seq_num, seq_len] = parse_sequence_component(seq);
+        auto parse_seq = parse_sequence_component(seq);
+        auto seq_num = parse_seq.first;
+        auto seq_len = parse_seq.second;
         auto cbor = Bytewords::decode(Bytewords::style::minimal, fragment);
         auto part = FountainEncoder::Part(cbor);
         if(seq_num != part.seq_num() || seq_len != part.seq_len()) return false;

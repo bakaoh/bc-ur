@@ -11,7 +11,7 @@
 #include <string>
 #include <exception>
 #include <utility>
-#include <optional>
+#include <boost/optional.hpp>
 
 #include "ur.hpp"
 #include "fountain-decoder.hpp"
@@ -20,7 +20,7 @@ namespace ur {
 
 class URDecoder final {
 public:
-    typedef std::optional<std::variant<UR, std::exception> > Result;
+    typedef boost::optional<boost::variant<UR, std::exception> > Result;
 
     class InvalidScheme: public std::exception { };
     class InvalidType: public std::exception { };
@@ -34,25 +34,25 @@ public:
     // Start decoding a (possibly) multi-part UR.
     URDecoder();
 
-    const std::optional<std::string>& expected_type() const { return expected_type_; }
+    const boost::optional<std::string>& expected_type() const { return expected_type_; }
     size_t expected_part_count() const { return fountain_decoder.expected_part_count(); }
     const PartIndexes& received_part_indexes() const { return fountain_decoder.received_part_indexes(); }
     const PartIndexes& last_part_indexes() const { return fountain_decoder.last_part_indexes(); }
     size_t processed_parts_count() const { return fountain_decoder.processed_parts_count(); }
     double estimated_percent_complete() const { return fountain_decoder.estimated_percent_complete(); }
     const Result& result() const { return result_; }
-    bool is_success() const { return result() && std::holds_alternative<UR>(result().value()); }
-    bool is_failure() const { return result() && std::holds_alternative<std::exception>(result().value()); }
+    bool is_success() const { return result() && result().value().type() == typeid(UR); }
+    bool is_failure() const { return result() && result().value().type() == typeid(std::exception); }
     bool is_complete() const { return result().has_value(); }
-    const UR& result_ur() const { return std::get<UR>(result().value()); }
-    const std::exception& result_error() const { return std::get<std::exception>(result().value()); }
+    const UR& result_ur() const { return boost::get<UR>(result().value()); }
+    const std::exception& result_error() const { return boost::get<std::exception>(result().value()); }
 
     bool receive_part(const std::string& s);
 
 private:
     FountainDecoder fountain_decoder;
 
-    std::optional<std::string> expected_type_;
+    boost::optional<std::string> expected_type_;
     Result result_;
 
     static std::pair<std::string, StringVector> parse(const std::string& string);

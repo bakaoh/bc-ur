@@ -104,7 +104,7 @@ void FountainDecoder::reduce_mixed_by(const Part& p) {
             enqueue(reduced_part);
         } else {
             // Otherwise, add it to the list of current mixed parts
-            new_mixed.insert(pair(reduced_part.indexes(), reduced_part));
+            new_mixed.insert(pair<PartIndexes, Part>(reduced_part.indexes(), reduced_part));
         }
     }
     _mixed_parts = new_mixed;
@@ -130,21 +130,21 @@ void FountainDecoder::process_simple_part(Part& p) {
     if(contains(received_part_indexes_, fragment_index)) return;
 
     // Record this part
-    _simple_parts.insert(pair(p.indexes(), p));
+    _simple_parts.insert(pair<PartIndexes, Part>(p.indexes(), p));
     received_part_indexes_.insert(fragment_index);
 
     // If we've received all the parts
     if(received_part_indexes_ == _expected_part_indexes) {
         // Reassemble the message from its fragments
         vector<Part> sorted_parts;
-        transform(_simple_parts.begin(), _simple_parts.end(), back_inserter(sorted_parts), [&](auto elem) { return elem.second; });
+        transform(_simple_parts.begin(), _simple_parts.end(), back_inserter(sorted_parts), [&](const pair<PartIndexes, Part> &elem) { return elem.second; });
         sort(sorted_parts.begin(), sorted_parts.end(),
             [](const Part& a, const Part& b) -> bool {
                 return a.index() < b.index();
             }
         );
         vector<ByteVector> fragments;
-        transform(sorted_parts.begin(), sorted_parts.end(), back_inserter(fragments), [&](auto part) { return part.data(); });
+        transform(sorted_parts.begin(), sorted_parts.end(), back_inserter(fragments), [&](const Part &part) { return part.data(); });
         auto message = join_fragments(fragments, *_expected_message_len);
 
         // Verify the message checksum and note success or failure
@@ -162,13 +162,13 @@ void FountainDecoder::process_simple_part(Part& p) {
 
 void FountainDecoder::process_mixed_part(const Part& p) {
     // Don't process duplicate parts
-    if(any_of(_mixed_parts.begin(), _mixed_parts.end(), [&](auto r) { return r.first == p.indexes(); })) {
+    if(any_of(_mixed_parts.begin(), _mixed_parts.end(), [&](const pair<PartIndexes, Part> &r) { return r.first == p.indexes(); })) {
         return;
     }
 
     // Reduce this part by all the others
-    auto p2 = accumulate(_simple_parts.begin(), _simple_parts.end(), p, [&](auto p, auto r) { return reduce_part_by_part(p, r.second); });
-    p2 = accumulate(_mixed_parts.begin(), _mixed_parts.end(), p2, [&](auto p, auto r) { return reduce_part_by_part(p, r.second); });
+    auto p2 = accumulate(_simple_parts.begin(), _simple_parts.end(), p, [&](const Part& p, const pair<PartIndexes, Part> &r) { return reduce_part_by_part(p, r.second); });
+    p2 = accumulate(_mixed_parts.begin(), _mixed_parts.end(), p2, [&](const Part& p, const pair<PartIndexes, Part> &r) { return reduce_part_by_part(p, r.second); });
 
     // If the part is now simple
     if(p2.is_simple()) {
@@ -178,7 +178,7 @@ void FountainDecoder::process_mixed_part(const Part& p) {
         // Reduce all the mixed parts by this one
         reduce_mixed_by(p2);
         // Record this new mixed part
-        _mixed_parts.insert(pair(p2.indexes(), p2));
+        _mixed_parts.insert(pair<PartIndexes, Part>(p2.indexes(), p2));
     }
 }
 
@@ -226,9 +226,9 @@ string FountainDecoder::result_description() const {
         desc = "nil";
     } else {
         auto r = *result_;
-        if(holds_alternative<ByteVector>(r)) {
+        if(r.type() == typeid(ByteVector)) {
             desc = to_string(get<ByteVector>(r).size()) + " bytes";
-        } else if(holds_alternative<exception>(r)) {
+        } else if(r.type() == typeid(exception)) {
             desc = get<exception>(r).what();
         } else {
             assert(false);
