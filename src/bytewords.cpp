@@ -9,6 +9,7 @@
 #include "utils.hpp"
 #include <stdexcept>
 #include <algorithm>
+#include <iterator>
 
 namespace ur {
 
