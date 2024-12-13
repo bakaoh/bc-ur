@@ -12,6 +12,7 @@
 #include <string>
 #include <cmath>
 #include <numeric>
+#include <iterator>
 
 using namespace std;
 

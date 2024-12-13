@@ -18,6 +18,7 @@ extern "C" {
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <iterator>
 
 using namespace std;
 
